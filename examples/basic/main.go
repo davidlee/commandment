@@ -13,7 +13,7 @@ import (
 	"com.github/davidlee/commandment/internal/services"
 )
 
-// Simple logger implementation
+// SimpleLogger provides a basic implementation of the Logger interface.
 type SimpleLogger struct {
 	logger *charmlog.Logger
 }

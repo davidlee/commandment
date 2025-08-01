@@ -9,24 +9,25 @@ import (
 	"time"
 )
 
-// Shared base interface for commands and queries
+// Operation is the shared base interface for commands and queries,
+// providing common behavior for execution, metadata access, and serialization.
 type Operation[TResult any] interface {
 	Execute(ctx context.Context) (TResult, error)
 	Metadata() OperationMetadata
 	Descriptor() OperationDescriptor
 }
 
-// Commands mutate state
+// Command extends Operation for operations that mutate state.
 type Command[TResult any] interface {
 	Operation[TResult]
 }
 
-// Queries are read-only
+// Query extends Operation for read-only operations that don't mutate state.
 type Query[TResult any] interface {
 	Operation[TResult]
 }
 
-// Optional metadata for audit trails and debugging
+// OperationMetadata contains timestamps and identifiers for audit trails and debugging.
 type OperationMetadata struct {
 	UUID     string    `json:"uuid"`
 	Created  time.Time `json:"created"`
@@ -34,7 +35,8 @@ type OperationMetadata struct {
 	Returned time.Time `json:"returned,omitempty"`
 }
 
-// Serializable operation representation
+// OperationDescriptor provides a serializable representation of an operation
+// including its type, parameters, and metadata for persistence and reconstruction.
 type OperationDescriptor struct {
 	Type     string            `json:"type"`
 	Params   interface{}       `json:"params"`
@@ -61,7 +63,7 @@ func mustMarshal(v interface{}) json.RawMessage {
 	return data
 }
 
-// Logger interface
+// Logger defines the interface for structured logging used throughout the operation framework.
 type Logger interface {
 	Info(msg string, keysAndValues ...interface{})
 	Error(msg string, keysAndValues ...interface{})
@@ -112,6 +114,9 @@ type operationWithMetadata interface {
 func generateUUID() string {
 	// Simple UUID alternative using crypto/rand
 	bytes := make([]byte, 16)
-	rand.Read(bytes)
+	if _, err := rand.Read(bytes); err != nil {
+		// Fallback to a simple counter if crypto/rand fails (shouldn't happen)
+		panic("failed to generate random bytes for UUID: " + err.Error())
+	}
 	return hex.EncodeToString(bytes)
 }

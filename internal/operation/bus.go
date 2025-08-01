@@ -1,3 +1,7 @@
+// Package operation implements the Command/Query pattern with type-safe operation creation,
+// service injection, and centralized logging. It provides a clean separation between
+// clients, commands/queries, and business services with support for serialization
+// and metadata tracking.
 package operation
 
 import (
@@ -7,11 +11,14 @@ import (
 	"time"
 )
 
+// OperationBus is the central orchestrator that manages service registry,
+// creates operations with dependency injection, and handles operation lifecycle.
 type OperationBus struct {
 	registry *ServiceRegistry
 	logger   Logger
 }
 
+// NewOperationBus creates a new OperationBus with the provided service registry and logger.
 func NewOperationBus(registry *ServiceRegistry, logger Logger) *OperationBus {
 	return &OperationBus{
 		registry: registry,
@@ -19,18 +26,18 @@ func NewOperationBus(registry *ServiceRegistry, logger Logger) *OperationBus {
 	}
 }
 
-// Query-only interface for read-only operations
+// QueryInvoker provides methods for creating read-only query operations.
 type QueryInvoker interface {
 	NewShowNodeQuery(params ShowNodeQueryParams) (*ShowNodeQuery, error)
 }
 
-// Command-only interface for mutations
+// CommandInvoker provides methods for creating command operations that mutate state.
 type CommandInvoker interface {
 	NewDisplayNodeTreeCommand(params DisplayNodeTreeCommandParams) (*DisplayNodeTreeCommand, error)
 	NewCreateListCommand(params CreateListCommandParams) (*CreateListCommand, error)
 }
 
-// Full interface includes both queries and commands
+// OperationInvoker combines QueryInvoker and CommandInvoker for full operation creation capabilities.
 type OperationInvoker interface {
 	QueryInvoker
 	CommandInvoker
@@ -99,7 +106,7 @@ func getRequiredServiceType[TOp any]() reflect.Type {
 }
 
 // Factory function for operation creation
-func newOperationWithService[TOp any](params any, service any, metadata OperationMetadata, logger Logger) (TOp, error) {
+func newOperationWithService[TOp any](params, service any, metadata OperationMetadata, logger Logger) (TOp, error) {
 	// Use reflection to create operation instance with params, service, metadata, and logger
 	opType := reflect.TypeOf((*TOp)(nil)).Elem()
 
@@ -125,9 +132,19 @@ func newOperationWithService[TOp any](params any, service any, metadata Operatio
 	structValue.FieldByName("Logger").Set(reflect.ValueOf(logger))
 
 	if opType.Kind() == reflect.Ptr {
-		return opValue.Interface().(TOp), nil
+		result, ok := opValue.Interface().(TOp)
+		if !ok {
+			var zero TOp
+			return zero, fmt.Errorf("type assertion failed: got %T, expected %T", opValue.Interface(), zero)
+		}
+		return result, nil
 	} else {
-		return opValue.Addr().Interface().(TOp), nil
+		result, ok := opValue.Addr().Interface().(TOp)
+		if !ok {
+			var zero TOp
+			return zero, fmt.Errorf("type assertion failed: got %T, expected %T", opValue.Addr().Interface(), zero)
+		}
+		return result, nil
 	}
 }
 
@@ -140,53 +157,53 @@ func (b *OperationBus) CreateFromDescriptor(descriptor OperationDescriptor) (int
 		if err := json.Unmarshal(mustMarshal(descriptor.Params), &params); err != nil {
 			return nil, err
 		}
-		return b.createDisplayNodeTreeCommand(params, descriptor.Metadata)
+		return b.createDisplayNodeTreeCommand(params, descriptor.Metadata), nil
 
 	case "CreateListCommand":
 		params := CreateListCommandParams{}
 		if err := json.Unmarshal(mustMarshal(descriptor.Params), &params); err != nil {
 			return nil, err
 		}
-		return b.createCreateListCommand(params, descriptor.Metadata)
+		return b.createCreateListCommand(params, descriptor.Metadata), nil
 
 	case "ShowNodeQuery":
 		params := ShowNodeQueryParams{}
 		if err := json.Unmarshal(mustMarshal(descriptor.Params), &params); err != nil {
 			return nil, err
 		}
-		return b.createShowNodeQuery(params, descriptor.Metadata)
+		return b.createShowNodeQuery(params, descriptor.Metadata), nil
 
 	default:
 		return nil, fmt.Errorf("unknown operation type: %s", descriptor.Type)
 	}
 }
 
-func (b *OperationBus) createDisplayNodeTreeCommand(params DisplayNodeTreeCommandParams, metadata OperationMetadata) (*DisplayNodeTreeCommand, error) {
+func (b *OperationBus) createDisplayNodeTreeCommand(params DisplayNodeTreeCommandParams, metadata OperationMetadata) *DisplayNodeTreeCommand {
 	service := GetService[TreeService](b.registry)
 	return &DisplayNodeTreeCommand{
 		Params:        params,
 		Service:       service,
 		OperationMeta: metadata,
 		Logger:        b.logger,
-	}, nil
+	}
 }
 
-func (b *OperationBus) createCreateListCommand(params CreateListCommandParams, metadata OperationMetadata) (*CreateListCommand, error) {
+func (b *OperationBus) createCreateListCommand(params CreateListCommandParams, metadata OperationMetadata) *CreateListCommand {
 	service := GetService[ListService](b.registry)
 	return &CreateListCommand{
 		Params:        params,
 		Service:       service,
 		OperationMeta: metadata,
 		Logger:        b.logger,
-	}, nil
+	}
 }
 
-func (b *OperationBus) createShowNodeQuery(params ShowNodeQueryParams, metadata OperationMetadata) (*ShowNodeQuery, error) {
+func (b *OperationBus) createShowNodeQuery(params ShowNodeQueryParams, metadata OperationMetadata) *ShowNodeQuery {
 	service := GetService[NodeService](b.registry)
 	return &ShowNodeQuery{
 		Params:        params,
 		Service:       service,
 		OperationMeta: metadata,
 		Logger:        b.logger,
-	}, nil
+	}
 }

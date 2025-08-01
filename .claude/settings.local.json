@@ -5,7 +5,8 @@
       "Bash(go vet:*)",
       "Bash(go fmt:*)",
       "Bash(just test:*)",
-      "Bash(just help:*)"
+      "Bash(just help:*)",
+      "Bash(just lint)"
     ],
     "deny": []
   }

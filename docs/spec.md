@@ -18,13 +18,13 @@ Implement proper **Command Pattern separation** with four distinct architectural
 ```
 ┌─────────────┐    creates    ┌─────────────┐
 │   Client    │──────────────►│   Command   │
-│ (CLI Parser)│               │ (ViceQuery) │
+│ (CLI Parser)│               │     (Query) │
 └─────────────┘               └─────────────┘
                                       │
                                       ▼
 ┌─────────────┐    holds ref  ┌─────────────┐    calls    ┌─────────────┐
 │   Invoker   │──────────────►│   Command   │────────────►│  Receiver   │
-│(CommandBus) │               │ (ViceQuery) │             │ (Service)   │
+│(CommandBus) │               │     (Query) │             │ (Service)   │
 └─────────────┘               └─────────────┘             └─────────────┘
 ```
 
@@ -39,7 +39,7 @@ Implement proper **Command Pattern separation** with four distinct architectural
    - Executes Commands by calling their Execute() methods with appropriate services
    - Handles cross-cutting concerns (logging, validation, middleware)
 
-3. **Command (ViceCommand/ViceQuery)**: Encapsulate requests and execution target
+3. **Command (Command/Query)**: Encapsulate requests and execution target
    - Self-contained objects with request data and receiver "address"
    - Type-safe Execute() methods which take no arguments (except contex.Context)
 

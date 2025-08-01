@@ -1,3 +1,5 @@
+// Package services provides mock implementations of business services
+// for testing the operation pattern framework.
 package services
 
 import (
@@ -27,7 +29,7 @@ func (s *MockTreeService) DisplayTree(ctx context.Context, params operation.Disp
 	}
 
 	return operation.NodeTree{
-		Nodes: nodes[:min(len(nodes), params.MaxDepth+1)],
+		Nodes: nodes[:minInt(len(nodes), params.MaxDepth+1)],
 		Stats: operation.TreeStats{
 			TotalNodes: len(nodes),
 			MaxDepth:   2,
@@ -84,7 +86,7 @@ func (s *MockNodeService) ShowNode(ctx context.Context, params operation.ShowNod
 	}, nil
 }
 
-func min(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}

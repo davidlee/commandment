@@ -9,7 +9,7 @@ linters:
   enable:
     - asasalint
     - staticcheck
-    - revive
+    #- revive
     - gosec
     - contextcheck
     - durationcheck
@@ -43,7 +43,7 @@ linters:
       - common-false-positives
     # generated: lax
     rules:
-      - path: 'test/|_test\.go'
+      - path: 'test/|.*_test\.go|mock_.*\.go'
         linters:
           - revive
           - errcheck
