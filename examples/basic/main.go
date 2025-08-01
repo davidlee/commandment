@@ -2,15 +2,14 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
 	charmlog "github.com/charmbracelet/log"
 
-	"com.github/davidlee/commandment/internal/operation"
-	"com.github/davidlee/commandment/internal/services"
+	"com.github/davidlee/commandment/examples/nodemanager"
+	"com.github/davidlee/commandment/pkg/operation"
 )
 
 // SimpleLogger provides a basic implementation of the Logger interface.
@@ -41,38 +40,36 @@ func main() {
 	fmt.Println("🚀 Commandment POC - Operation Pattern Demo")
 	fmt.Println("==========================================")
 
-	// Setup
+	// Setup the operation framework
 	logger := NewSimpleLogger()
 	registry := operation.NewServiceRegistry()
 
-	// Register mock services
-	operation.RegisterService[operation.TreeService](registry, services.NewMockTreeService())
-	operation.RegisterService[operation.ListService](registry, services.NewMockListService())
-	operation.RegisterService[operation.NodeService](registry, services.NewMockNodeService())
+	// Register domain services
+	operation.RegisterService[nodemanager.TreeService](registry, nodemanager.NewMockTreeService())
+	operation.RegisterService[nodemanager.ListService](registry, nodemanager.NewMockListService())
+	operation.RegisterService[nodemanager.NodeService](registry, nodemanager.NewMockNodeService())
 
-	// Create operation bus
-	bus := operation.NewOperationBus(registry, logger)
+	// Create operation bus and domain-specific wrapper
+	operationBus := operation.NewOperationBus(registry, logger)
+	nodeManagerBus := nodemanager.NewNodeManagerBus(operationBus)
 
 	fmt.Println("\n1. 🌳 Executing DisplayNodeTreeCommand...")
-	executeTreeDisplay(bus)
+	executeTreeDisplay(nodeManagerBus)
 
 	fmt.Println("\n2. 📝 Executing CreateListCommand...")
-	executeListCreation(bus)
+	executeListCreation(nodeManagerBus)
 
 	fmt.Println("\n3. 👁️  Executing ShowNodeQuery...")
-	executeShowNode(bus)
+	executeShowNode(nodeManagerBus)
 
-	fmt.Println("\n4. 📦 Testing Serialization...")
-	testSerialization(bus)
-
-	fmt.Println("\n5. 🔒 Testing Query-Only Access...")
-	testQueryOnlyAccess(bus)
+	fmt.Println("\n4. 🔒 Testing Query-Only Access...")
+	testQueryOnlyAccess(nodeManagerBus)
 
 	fmt.Println("\n✅ Demo completed!")
 }
 
-func executeTreeDisplay(invoker operation.OperationInvoker) {
-	params := operation.DisplayNodeTreeCommandParams{
+func executeTreeDisplay(invoker nodemanager.OperationInvoker) {
+	params := nodemanager.DisplayNodeTreeCommandParams{
 		RootReference: "root-123",
 		MaxDepth:      3,
 	}
@@ -95,8 +92,8 @@ func executeTreeDisplay(invoker operation.OperationInvoker) {
 	}
 }
 
-func executeListCreation(invoker operation.OperationInvoker) {
-	params := operation.CreateListCommandParams{
+func executeListCreation(invoker nodemanager.OperationInvoker) {
+	params := nodemanager.CreateListCommandParams{
 		Title:       "My New List",
 		Description: "A list created via command pattern",
 		ParentID:    nil,
@@ -122,8 +119,8 @@ func executeListCreation(invoker operation.OperationInvoker) {
 	}
 }
 
-func executeShowNode(invoker operation.OperationInvoker) {
-	params := operation.ShowNodeQueryParams{
+func executeShowNode(invoker nodemanager.OperationInvoker) {
+	params := nodemanager.ShowNodeQueryParams{
 		Ref: 42,
 	}
 
@@ -141,51 +138,11 @@ func executeShowNode(invoker operation.OperationInvoker) {
 	fmt.Printf("   📝 Description: %s\n", result.Description)
 }
 
-func testSerialization(bus *operation.OperationBus) {
-	// Create a command
-	params := operation.CreateListCommandParams{
-		Title:       "Serialization Test",
-		Description: "Testing command serialization",
-		ParentID:    nil,
-	}
-
-	cmd, err := bus.NewCreateListCommand(params)
-	if err != nil {
-		log.Fatalf("Failed to create command: %v", err)
-	}
-
-	// Serialize to JSON
-	descriptor := cmd.Descriptor()
-	jsonData, err := json.MarshalIndent(descriptor, "   ", "  ")
-	if err != nil {
-		log.Fatalf("Failed to serialize: %v", err)
-	}
-
-	fmt.Printf("   📤 Serialized command:\n%s\n", string(jsonData))
-
-	// Deserialize and execute
-	recreatedCmd, err := bus.CreateFromDescriptor(descriptor)
-	if err != nil {
-		log.Fatalf("Failed to deserialize: %v", err)
-	}
-
-	switch c := recreatedCmd.(type) {
-	case *operation.CreateListCommand:
-		result, err := c.Execute(context.Background())
-		if err != nil {
-			log.Fatalf("Recreated command execution failed: %v", err)
-		}
-		fmt.Printf("   📥 Deserialized command executed successfully: %s\n", result.Node.Title)
-	default:
-		log.Fatalf("Unexpected command type: %T", recreatedCmd)
-	}
-}
-
-func testQueryOnlyAccess(invoker operation.OperationInvoker) {
+func testQueryOnlyAccess(invoker nodemanager.OperationInvoker) {
 	// Cast to query-only interface
-	queryInvoker := operation.QueryInvoker(invoker)
+	queryInvoker := nodemanager.QueryInvoker(invoker)
 
-	params := operation.ShowNodeQueryParams{Ref: 123}
+	params := nodemanager.ShowNodeQueryParams{Ref: 123}
 	query, err := queryInvoker.NewShowNodeQuery(params)
 	if err != nil {
 		log.Fatalf("Failed to create query: %v", err)

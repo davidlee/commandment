@@ -6,7 +6,10 @@
       "Bash(go fmt:*)",
       "Bash(just test:*)",
       "Bash(just help:*)",
-      "Bash(just lint)"
+      "Bash(just lint)",
+      "Bash(mkdir:*)",
+      "Bash(go run:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

@@ -2,7 +2,7 @@
 default: deps test demo
 
 lint:
-    golangci-lint run ./...
+    golangci-lint run ./pkg/... ./examples/...
 
 # Run the basic demo
 demo:
@@ -12,7 +12,7 @@ demo:
 # Run tests
 test:
     @echo "🧪 Running tests..."
-    @go test ./...
+    @go test ./pkg/... ./examples/...
 
 # Build the demo binary
 build:
