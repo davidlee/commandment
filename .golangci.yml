@@ -1,0 +1,133 @@
+version: "2"
+
+run:
+  timeout: 1m
+  tests: true
+  concurrency: 16
+
+linters:
+  enable:
+    - asasalint
+    - staticcheck
+    - revive
+    - gosec
+    - contextcheck
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - govet
+    - gocritic
+    - nilnil
+    - nilerr
+    - nakedret
+    - ineffassign
+    - unused
+    - misspell
+    - prealloc
+    - reassign
+    - cyclop
+    - testableexamples
+    - thelper
+    - tparallel
+    - wastedassign
+    - usestdlibvars
+    - unparam
+    - unconvert
+    - tagliatelle
+    - sqlclosecheck
+    - rowserrcheck
+    - predeclared
+  exclusions:
+    presets:
+      - common-false-positives
+    # generated: lax
+    rules:
+      - path: 'test/|_test\.go'
+        linters:
+          - revive
+          - errcheck
+          - gosec
+
+  settings:
+    staticcheck:
+      checks: ["all"]
+
+    revive:
+      severity: warning
+      rules:
+        - name: exported
+          severity: warning
+          disabled: false
+        - name: var-naming
+          severity: warning
+          disabled: false
+        - name: package-comments
+          severity: warning
+          disabled: false
+
+    govet:
+      disable:
+        - fieldalignment # I'm ok to waste some bytes
+    gosec:
+      severity: "medium"
+      confidence: "medium"
+      excludes:
+        - G204 # Subprocess launched with variable
+        - G304 # File path provided as taint input
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+      disabled-checks:
+        # These 3 will detect many cases, but they do sense
+        # if it's performance oriented code
+        - hugeParam
+        - rangeExprCopy
+        - rangeValCopy
+
+    errcheck:
+      # Report `a := b.(MyStruct)` when `a, ok := ...` should be.
+      check-type-assertions: true # Default: false
+      # Report skipped checks:`num, _ := strconv.Atoi(numStr)`.
+      check-blank: true # Default: false
+      # Function to skip.
+      exclude-functions:
+        - io/ioutil.ReadFile
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+
+    nakedret:
+      # No naked returns, ever.
+      max-func-lines: 1 # Default: 30
+
+    nilnil:
+      checked-types:
+        - ptr
+        - func
+        - iface
+        - map
+        - chan
+
+    cyclop:
+      max-complexity: 10
+      # package-average: 0.5
+
+    tagliatelle:
+      case:
+        rules:
+          json: snake # why it's not a `snake` by default?!
+          yaml: snake # why it's not a `snake` by default?!
+          xml: camel
+          bson: camel
+          avro: snake
+          mapstructure: kebab
+issues:
+  fix: true
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
