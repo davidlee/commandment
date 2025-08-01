@@ -3,7 +3,7 @@ package nodemanager
 import (
 	"context"
 
-	"com.github/davidlee/commandment/pkg/operation"
+	"github.com/davidlee/commandment/pkg/operation"
 )
 
 // ShowNodeQuery implements a read-only query for retrieving individual nodes.

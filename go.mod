@@ -1,4 +1,4 @@
-module com.github/davidlee/commandment
+module github.com/davidlee/commandment
 
 go 1.24.4
 

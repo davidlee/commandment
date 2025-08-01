@@ -32,7 +32,7 @@ The framework follows the Command Pattern with four distinct roles:
 ### 1. Install the Library
 
 ```bash
-go get github.com/your-org/commandment/pkg/operation
+go get github.com/davidlee/commandment/pkg/operation
 ```
 
 ### 2. Define Your Domain Services
@@ -73,7 +73,7 @@ type User struct {
 ### 4. Implement Operations
 
 ```go
-import "github.com/your-org/commandment/pkg/operation"
+import "github.com/davidlee/commandment/pkg/operation"
 
 // Command for creating users (mutates state)
 type CreateUserCommand struct {

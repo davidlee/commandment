@@ -1,6 +1,6 @@
 package nodemanager
 
-import "com.github/davidlee/commandment/pkg/operation"
+import "github.com/davidlee/commandment/pkg/operation"
 
 // QueryInvoker provides methods for creating read-only query operations.
 type QueryInvoker interface {

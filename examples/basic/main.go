@@ -8,8 +8,8 @@ import (
 
 	charmlog "github.com/charmbracelet/log"
 
-	"com.github/davidlee/commandment/examples/nodemanager"
-	"com.github/davidlee/commandment/pkg/operation"
+	"github.com/davidlee/commandment/examples/nodemanager"
+	"github.com/davidlee/commandment/pkg/operation"
 )
 
 // SimpleLogger provides a basic implementation of the Logger interface.
