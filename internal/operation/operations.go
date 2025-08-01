@@ -4,10 +4,10 @@ import "context"
 
 // Concrete query implementation (read-only)
 type ShowNodeQuery struct {
-	Params        ShowNodeQueryParams
-	Service       NodeService
-	OperationMeta OperationMetadata
-	Logger        Logger
+	Params  ShowNodeQueryParams
+	Service NodeService
+	Meta    OperationMetadata
+	Logger  Logger
 }
 
 func (q *ShowNodeQuery) Execute(ctx context.Context) (Node, error) {
@@ -17,26 +17,26 @@ func (q *ShowNodeQuery) Execute(ctx context.Context) (Node, error) {
 }
 
 func (q *ShowNodeQuery) Metadata() OperationMetadata {
-	return q.OperationMeta
+	return q.Meta
 }
 
 func (q *ShowNodeQuery) Descriptor() OperationDescriptor {
 	return OperationDescriptor{
 		Type:     "ShowNodeQuery",
 		Params:   q.Params,
-		Metadata: q.OperationMeta,
+		Metadata: q.Meta,
 	}
 }
 
-func (q *ShowNodeQuery) getMetadata() *OperationMetadata { return &q.OperationMeta }
+func (q *ShowNodeQuery) getMetadata() *OperationMetadata { return &q.Meta }
 func (q *ShowNodeQuery) getLogger() Logger               { return q.Logger }
 
 // Concrete command implementation (updates node refs)
 type DisplayNodeTreeCommand struct {
-	Params        DisplayNodeTreeCommandParams
-	Service       TreeService
-	OperationMeta OperationMetadata
-	Logger        Logger
+	Params  DisplayNodeTreeCommandParams
+	Service TreeService
+	Meta    OperationMetadata
+	Logger  Logger
 }
 
 func (c *DisplayNodeTreeCommand) Execute(ctx context.Context) (NodeTree, error) {
@@ -46,26 +46,26 @@ func (c *DisplayNodeTreeCommand) Execute(ctx context.Context) (NodeTree, error) 
 }
 
 func (c *DisplayNodeTreeCommand) Metadata() OperationMetadata {
-	return c.OperationMeta
+	return c.Meta
 }
 
 func (c *DisplayNodeTreeCommand) Descriptor() OperationDescriptor {
 	return OperationDescriptor{
 		Type:     "DisplayNodeTreeCommand",
 		Params:   c.Params,
-		Metadata: c.OperationMeta,
+		Metadata: c.Meta,
 	}
 }
 
-func (c *DisplayNodeTreeCommand) getMetadata() *OperationMetadata { return &c.OperationMeta }
+func (c *DisplayNodeTreeCommand) getMetadata() *OperationMetadata { return &c.Meta }
 func (c *DisplayNodeTreeCommand) getLogger() Logger               { return c.Logger }
 
 // Concrete command implementation (mutates state)
 type CreateListCommand struct {
-	Params        CreateListCommandParams
-	Service       ListService
-	OperationMeta OperationMetadata
-	Logger        Logger
+	Params  CreateListCommandParams
+	Service ListService
+	Meta    OperationMetadata
+	Logger  Logger
 }
 
 func (c *CreateListCommand) Execute(ctx context.Context) (NodeCommandResult, error) {
@@ -75,16 +75,16 @@ func (c *CreateListCommand) Execute(ctx context.Context) (NodeCommandResult, err
 }
 
 func (c *CreateListCommand) Metadata() OperationMetadata {
-	return c.OperationMeta
+	return c.Meta
 }
 
 func (c *CreateListCommand) Descriptor() OperationDescriptor {
 	return OperationDescriptor{
 		Type:     "CreateListCommand",
 		Params:   c.Params,
-		Metadata: c.OperationMeta,
+		Metadata: c.Meta,
 	}
 }
 
-func (c *CreateListCommand) getMetadata() *OperationMetadata { return &c.OperationMeta }
+func (c *CreateListCommand) getMetadata() *OperationMetadata { return &c.Meta }
 func (c *CreateListCommand) getLogger() Logger               { return c.Logger }

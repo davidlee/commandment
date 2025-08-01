@@ -128,7 +128,7 @@ func newOperationWithService[TOp any](params, service any, metadata OperationMet
 
 	structValue.FieldByName("Params").Set(reflect.ValueOf(params))
 	structValue.FieldByName("Service").Set(reflect.ValueOf(service))
-	structValue.FieldByName("OperationMeta").Set(reflect.ValueOf(metadata))
+	structValue.FieldByName("Meta").Set(reflect.ValueOf(metadata))
 	structValue.FieldByName("Logger").Set(reflect.ValueOf(logger))
 
 	if opType.Kind() == reflect.Ptr {
@@ -181,29 +181,29 @@ func (b *OperationBus) CreateFromDescriptor(descriptor OperationDescriptor) (int
 func (b *OperationBus) createDisplayNodeTreeCommand(params DisplayNodeTreeCommandParams, metadata OperationMetadata) *DisplayNodeTreeCommand {
 	service := GetService[TreeService](b.registry)
 	return &DisplayNodeTreeCommand{
-		Params:        params,
-		Service:       service,
-		OperationMeta: metadata,
-		Logger:        b.logger,
+		Params:  params,
+		Service: service,
+		Meta:    metadata,
+		Logger:  b.logger,
 	}
 }
 
 func (b *OperationBus) createCreateListCommand(params CreateListCommandParams, metadata OperationMetadata) *CreateListCommand {
 	service := GetService[ListService](b.registry)
 	return &CreateListCommand{
-		Params:        params,
-		Service:       service,
-		OperationMeta: metadata,
-		Logger:        b.logger,
+		Params:  params,
+		Service: service,
+		Meta:    metadata,
+		Logger:  b.logger,
 	}
 }
 
 func (b *OperationBus) createShowNodeQuery(params ShowNodeQueryParams, metadata OperationMetadata) *ShowNodeQuery {
 	service := GetService[NodeService](b.registry)
 	return &ShowNodeQuery{
-		Params:        params,
-		Service:       service,
-		OperationMeta: metadata,
-		Logger:        b.logger,
+		Params:  params,
+		Service: service,
+		Meta:    metadata,
+		Logger:  b.logger,
 	}
 }

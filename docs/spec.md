@@ -113,18 +113,18 @@ type Query[TResult any] interface {
 
 // Concrete command implementation (updates node refs)
 type DisplayNodeTreeCommand struct {
-    Params        DisplayNodeTreeCommandParams
-    Service       TreeService          // Injected during creation
-    OperationMeta OperationMetadata    // Injected during creation
-    Logger        Logger               // Injected during creation
+    Params  DisplayNodeTreeCommandParams
+    Service TreeService          // Injected during creation
+    Meta    OperationMetadata    // Injected during creation
+    Logger  Logger               // Injected during creation
 }
 
 // Concrete query implementation (read-only)
 type ShowNodeQuery struct {
-    Params        ShowNodeQueryParams
-    Service       NodeService          // Injected during creation
-    OperationMeta OperationMetadata    // Injected during creation
-    Logger        Logger               // Injected during creation
+    Params  ShowNodeQueryParams
+    Service NodeService          // Injected during creation
+    Meta    OperationMetadata    // Injected during creation
+    Logger  Logger               // Injected during creation
 }
 
 func (q *ShowNodeQuery) Execute(ctx context.Context) (Node, error) {
@@ -134,18 +134,18 @@ func (q *ShowNodeQuery) Execute(ctx context.Context) (Node, error) {
 }
 
 func (q *ShowNodeQuery) Metadata() OperationMetadata {
-    return q.OperationMeta
+    return q.Meta
 }
 
 func (q *ShowNodeQuery) Descriptor() OperationDescriptor {
     return OperationDescriptor{
         Type:     "ShowNodeQuery",
         Params:   q.Params,
-        Metadata: q.OperationMeta,
+        Metadata: q.Meta,
     }
 }
 
-func (q *ShowNodeQuery) getMetadata() *OperationMetadata { return &q.OperationMeta }
+func (q *ShowNodeQuery) getMetadata() *OperationMetadata { return &q.Meta }
 func (q *ShowNodeQuery) getLogger() Logger { return q.Logger }
 
 func (c *DisplayNodeTreeCommand) Execute(ctx context.Context) (NodeTree, error) {
@@ -155,26 +155,26 @@ func (c *DisplayNodeTreeCommand) Execute(ctx context.Context) (NodeTree, error) 
 }
 
 func (c *DisplayNodeTreeCommand) Metadata() OperationMetadata {
-    return c.OperationMeta
+    return c.Meta
 }
 
 func (c *DisplayNodeTreeCommand) Descriptor() OperationDescriptor {
     return OperationDescriptor{
         Type:     "DisplayNodeTreeCommand",
         Params:   c.Params,
-        Metadata: c.OperationMeta,
+        Metadata: c.Meta,
     }
 }
 
-func (c *DisplayNodeTreeCommand) getMetadata() *OperationMetadata { return &c.OperationMeta }
+func (c *DisplayNodeTreeCommand) getMetadata() *OperationMetadata { return &c.Meta }
 func (c *DisplayNodeTreeCommand) getLogger() Logger { return c.Logger }
 
 // Concrete command implementation (mutates state)
 type CreateListCommand struct {
-    Params        CreateListCommandParams
-    Service       ListService
-    OperationMeta OperationMetadata
-    Logger        Logger
+    Params  CreateListCommandParams
+    Service ListService
+    Meta    OperationMetadata
+    Logger  Logger
 }
 
 func (c *CreateListCommand) Execute(ctx context.Context) (NodeCommandResult, error) {
@@ -184,18 +184,18 @@ func (c *CreateListCommand) Execute(ctx context.Context) (NodeCommandResult, err
 }
 
 func (c *CreateListCommand) Metadata() OperationMetadata {
-    return c.OperationMeta
+    return c.Meta
 }
 
 func (c *CreateListCommand) Descriptor() OperationDescriptor {
     return OperationDescriptor{
         Type:     "CreateListCommand", 
         Params:   c.Params,
-        Metadata: c.OperationMeta,
+        Metadata: c.Meta,
     }
 }
 
-func (c *CreateListCommand) getMetadata() *OperationMetadata { return &c.OperationMeta }
+func (c *CreateListCommand) getMetadata() *OperationMetadata { return &c.Meta }
 func (c *CreateListCommand) getLogger() Logger { return c.Logger }
 ```
 
@@ -297,7 +297,7 @@ func newOperationWithService[TOp any](params any, service any, metadata Operatio
     
     opValue.FieldByName("Params").Set(reflect.ValueOf(params))
     opValue.FieldByName("Service").Set(reflect.ValueOf(service))
-    opValue.FieldByName("OperationMeta").Set(reflect.ValueOf(metadata))
+    opValue.FieldByName("Meta").Set(reflect.ValueOf(metadata))
     opValue.FieldByName("Logger").Set(reflect.ValueOf(logger))
     
     return opValue.Addr().Interface().(TOp), nil
@@ -375,20 +375,20 @@ func (b *OperationBus) CreateFromDescriptor(descriptor OperationDescriptor) (int
 func (b *OperationBus) createDisplayNodeTreeCommand(params DisplayNodeTreeCommandParams, metadata OperationMetadata) (*DisplayNodeTreeCommand, error) {
     service := GetService[TreeService](b.registry)
     return &DisplayNodeTreeCommand{
-        Params:        params,
-        Service:       service,
-        OperationMeta: metadata,
-        Logger:        b.logger,
+        Params:  params,
+        Service: service,
+        Meta:    metadata,
+        Logger:  b.logger,
     }, nil
 }
 
 func (b *OperationBus) createCreateListCommand(params CreateListCommandParams, metadata OperationMetadata) (*CreateListCommand, error) {
     service := GetService[ListService](b.registry)
     return &CreateListCommand{
-        Params:        params,
-        Service:       service,
-        OperationMeta: metadata,
-        Logger:        b.logger,
+        Params:  params,
+        Service: service,
+        Meta:    metadata,
+        Logger:  b.logger,
     }, nil
 }
 ```
@@ -661,7 +661,7 @@ type Logger interface {
 
 ### Implementation Notes
 
-- **Field Naming**: The metadata field is named `OperationMeta` (not `Metadata`) to avoid Go's field/method name conflict with the `Metadata()` method
+- **Field Naming**: The metadata field is named `Meta` (not `Metadata`) to avoid Go's field/method name conflict with the `Metadata()` method
 - **Naming Convention**: Commands follow `<Operation><Entity>Command` pattern
 - **Client Interface**: Use `CommandInvoker` interface with specific `New*Command()` methods
   - Avoids generic syntax in client code
@@ -670,7 +670,7 @@ type Logger interface {
 - **Required Fields**: All commands must have:
   - `Params` field for request data
   - `Service` field for service injection
-  - `OperationMeta` field for operation tracking
+  - `Meta` field for operation tracking
   - `Logger` field for structured logging
 - **Required Methods**: All commands must implement:
   - `Execute(ctx context.Context) (TResult, error)`
