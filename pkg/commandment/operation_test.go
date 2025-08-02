@@ -1,10 +1,10 @@
-package operation_test
+package commandment_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/davidlee/commandment/pkg/operation"
+	"github.com/davidlee/commandment/pkg/commandment"
 )
 
 // Test Logger implementation
@@ -30,41 +30,41 @@ func (s *MockTestService) DoSomething(ctx context.Context, input string) (string
 type TestOperation struct {
 	Params  string
 	Service TestService
-	Meta    operation.OperationMetadata
-	Logger  operation.Logger
+	Meta    commandment.OperationMetadata
+	Logger  commandment.Logger
 }
 
 func (op *TestOperation) Execute(ctx context.Context) (string, error) {
-	return operation.ExecuteOperation(op, func() (string, error) {
+	return commandment.ExecuteOperation(op, func() (string, error) {
 		return op.Service.DoSomething(ctx, op.Params)
 	})
 }
 
-func (op *TestOperation) Metadata() operation.OperationMetadata {
+func (op *TestOperation) Metadata() commandment.OperationMetadata {
 	return op.Meta
 }
 
-func (op *TestOperation) Descriptor() operation.OperationDescriptor {
-	return operation.OperationDescriptor{
+func (op *TestOperation) Descriptor() commandment.OperationDescriptor {
+	return commandment.OperationDescriptor{
 		Type:     "TestOperation",
 		Params:   op.Params,
 		Metadata: op.Meta,
 	}
 }
 
-func (op *TestOperation) GetMetadata() *operation.OperationMetadata { return &op.Meta }
-func (op *TestOperation) GetLogger() operation.Logger               { return op.Logger }
+func (op *TestOperation) GetMetadata() *commandment.OperationMetadata { return &op.Meta }
+func (op *TestOperation) GetLogger() commandment.Logger               { return op.Logger }
 
 func TestOperationFramework(t *testing.T) {
 	// Setup
-	registry := operation.NewServiceRegistry()
-	operation.RegisterService[TestService](registry, &MockTestService{})
+	registry := commandment.NewServiceRegistry()
+	commandment.RegisterService[TestService](registry, &MockTestService{})
 
 	logger := &TestLogger{}
-	bus := operation.NewOperationBus(registry, logger)
+	bus := commandment.NewOperationBus(registry, logger)
 
 	// Test operation creation
-	op, err := operation.CreateOperation[*TestOperation](bus, "test input")
+	op, err := commandment.CreateOperation[*TestOperation](bus, "test input")
 	if err != nil {
 		t.Fatalf("Failed to create operation: %v", err)
 	}
@@ -96,13 +96,13 @@ func TestOperationFramework(t *testing.T) {
 }
 
 func TestServiceRegistry(t *testing.T) {
-	registry := operation.NewServiceRegistry()
-	
+	registry := commandment.NewServiceRegistry()
+
 	// Test registration and retrieval
 	mockService := &MockTestService{}
-	operation.RegisterService[TestService](registry, mockService)
-	
-	retrieved := operation.GetService[TestService](registry)
+	commandment.RegisterService[TestService](registry, mockService)
+
+	retrieved := commandment.GetService[TestService](registry)
 	if retrieved != mockService {
 		t.Error("Retrieved service should be the same instance as registered")
 	}

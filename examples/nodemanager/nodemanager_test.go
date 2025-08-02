@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/davidlee/commandment/examples/nodemanager"
-	"github.com/davidlee/commandment/pkg/operation"
+	"github.com/davidlee/commandment/pkg/commandment"
 )
 
 // Simple test logger
@@ -17,14 +17,14 @@ func (l *TestLogger) Debug(msg string, keysAndValues ...interface{}) {}
 
 func TestNodeManagerBasicFlow(t *testing.T) {
 	// Setup framework
-	registry := operation.NewServiceRegistry()
-	operation.RegisterService[nodemanager.TreeService](registry, nodemanager.NewMockTreeService())
-	operation.RegisterService[nodemanager.ListService](registry, nodemanager.NewMockListService())
-	operation.RegisterService[nodemanager.NodeService](registry, nodemanager.NewMockNodeService())
+	registry := commandment.NewServiceRegistry()
+	commandment.RegisterService[nodemanager.TreeService](registry, nodemanager.NewMockTreeService())
+	commandment.RegisterService[nodemanager.ListService](registry, nodemanager.NewMockListService())
+	commandment.RegisterService[nodemanager.NodeService](registry, nodemanager.NewMockNodeService())
 
 	logger := &TestLogger{}
-	operationBus := operation.NewOperationBus(registry, logger)
-	
+	operationBus := commandment.NewOperationBus(registry, logger)
+
 	// Create domain-specific bus
 	nodeManagerBus := nodemanager.NewNodeManagerBus(operationBus)
 
@@ -66,11 +66,11 @@ func TestNodeManagerBasicFlow(t *testing.T) {
 
 func TestQueryOnlyInterface(t *testing.T) {
 	// Setup
-	registry := operation.NewServiceRegistry()
-	operation.RegisterService[nodemanager.NodeService](registry, nodemanager.NewMockNodeService())
+	registry := commandment.NewServiceRegistry()
+	commandment.RegisterService[nodemanager.NodeService](registry, nodemanager.NewMockNodeService())
 
 	logger := &TestLogger{}
-	operationBus := operation.NewOperationBus(registry, logger)
+	operationBus := commandment.NewOperationBus(registry, logger)
 	nodeManagerBus := nodemanager.NewNodeManagerBus(operationBus)
 
 	// Cast to query-only interface

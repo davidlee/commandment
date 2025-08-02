@@ -1,8 +1,8 @@
-// Package operation implements the Command/Query pattern with type-safe operation creation,
+// Package commandment implements the Command/Query pattern with type-safe operation creation,
 // service injection, and centralized logging. It provides a clean separation between
 // clients, commands/queries, and business services with support for serialization
 // and metadata tracking.
-package operation
+package commandment
 
 import (
 	"context"

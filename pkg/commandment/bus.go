@@ -1,4 +1,4 @@
-package operation
+package commandment
 
 import (
 	"fmt"
@@ -60,7 +60,7 @@ func CreateOperation[TOp Operation[TResult], TResult any](
 	return op, nil
 }
 
-// CreateFromDescriptor recreates an executable operation from a serialized descriptor.
+// DescriptorFactory recreates an executable operation from a serialized descriptor.
 // This method must be implemented by users for their specific operation types.
 type DescriptorFactory interface {
 	CreateFromDescriptor(descriptor OperationDescriptor) (interface{}, error)

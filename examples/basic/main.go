@@ -9,7 +9,7 @@ import (
 	charmlog "github.com/charmbracelet/log"
 
 	"github.com/davidlee/commandment/examples/nodemanager"
-	"github.com/davidlee/commandment/pkg/operation"
+	"github.com/davidlee/commandment/pkg/commandment"
 )
 
 // SimpleLogger provides a basic implementation of the Logger interface.
@@ -42,15 +42,15 @@ func main() {
 
 	// Setup the operation framework
 	logger := NewSimpleLogger()
-	registry := operation.NewServiceRegistry()
+	registry := commandment.NewServiceRegistry()
 
 	// Register domain services
-	operation.RegisterService[nodemanager.TreeService](registry, nodemanager.NewMockTreeService())
-	operation.RegisterService[nodemanager.ListService](registry, nodemanager.NewMockListService())
-	operation.RegisterService[nodemanager.NodeService](registry, nodemanager.NewMockNodeService())
+	commandment.RegisterService[nodemanager.TreeService](registry, nodemanager.NewMockTreeService())
+	commandment.RegisterService[nodemanager.ListService](registry, nodemanager.NewMockListService())
+	commandment.RegisterService[nodemanager.NodeService](registry, nodemanager.NewMockNodeService())
 
 	// Create operation bus and domain-specific wrapper
-	operationBus := operation.NewOperationBus(registry, logger)
+	operationBus := commandment.NewOperationBus(registry, logger)
 	nodeManagerBus := nodemanager.NewNodeManagerBus(operationBus)
 
 	fmt.Println("\n1. 🌳 Executing DisplayNodeTreeCommand...")

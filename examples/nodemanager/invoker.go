@@ -1,6 +1,6 @@
 package nodemanager
 
-import "github.com/davidlee/commandment/pkg/operation"
+import "github.com/davidlee/commandment/pkg/commandment"
 
 // QueryInvoker provides methods for creating read-only query operations.
 type QueryInvoker interface {
@@ -21,25 +21,25 @@ type OperationInvoker interface {
 
 // NodeManagerBus wraps the operation framework bus and provides domain-specific operation creation.
 type NodeManagerBus struct {
-	bus *operation.OperationBus
+	bus *commandment.OperationBus
 }
 
 // NewNodeManagerBus creates a new NodeManagerBus wrapping the operation framework.
-func NewNodeManagerBus(bus *operation.OperationBus) *NodeManagerBus {
+func NewNodeManagerBus(bus *commandment.OperationBus) *NodeManagerBus {
 	return &NodeManagerBus{bus: bus}
 }
 
-// NewShowNodeQuery creates a new ShowNodeQuery operation.
+// NewShowNodeQuery creates a new ShowNodeQuery commandment.
 func (b *NodeManagerBus) NewShowNodeQuery(params ShowNodeQueryParams) (*ShowNodeQuery, error) {
-	return operation.CreateOperation[*ShowNodeQuery](b.bus, params)
+	return commandment.CreateOperation[*ShowNodeQuery](b.bus, params)
 }
 
-// NewDisplayNodeTreeCommand creates a new DisplayNodeTreeCommand operation.
+// NewDisplayNodeTreeCommand creates a new DisplayNodeTreeCommand commandment.
 func (b *NodeManagerBus) NewDisplayNodeTreeCommand(params DisplayNodeTreeCommandParams) (*DisplayNodeTreeCommand, error) {
-	return operation.CreateOperation[*DisplayNodeTreeCommand](b.bus, params)
+	return commandment.CreateOperation[*DisplayNodeTreeCommand](b.bus, params)
 }
 
-// NewCreateListCommand creates a new CreateListCommand operation.
+// NewCreateListCommand creates a new CreateListCommand commandment.
 func (b *NodeManagerBus) NewCreateListCommand(params CreateListCommandParams) (*CreateListCommand, error) {
-	return operation.CreateOperation[*CreateListCommand](b.bus, params)
+	return commandment.CreateOperation[*CreateListCommand](b.bus, params)
 }
