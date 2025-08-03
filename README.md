@@ -21,10 +21,10 @@ The framework follows the Command Pattern with four distinct roles:
 └─────────────┘               └─────────────┘
                                       │
                                       ▼
-┌─────────────┐    holds ref  ┌─────────────┐    calls    ┌─────────────┐
-│   Invoker   │──────────────►│   Command   │────────────►│  Receiver   │
+┌──────────────┐    holds ref  ┌─────────────┐    calls    ┌─────────────┐
+│   Invoker    │──────────────►│   Command   │────────────►│  Receiver   │
 │(OperationBus)│               │   (Query)   │             │ (Service)   │
-└─────────────┘               └─────────────┘             └─────────────┘
+└──────────────┘               └─────────────┘             └─────────────┘
 ```
 
 ## Quick Start
