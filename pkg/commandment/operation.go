@@ -43,7 +43,7 @@ type OperationMetadata struct {
 // including its type, parameters, and metadata for persistence and reconstruction.
 type OperationDescriptor struct {
 	Type     string            `json:"type"`
-	Params   interface{}       `json:"params"`
+	Params   any       `json:"params"`
 	Metadata OperationMetadata `json:"metadata"`
 }
 
@@ -59,7 +59,7 @@ func (od OperationDescriptor) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func mustMarshal(v interface{}) json.RawMessage {
+func mustMarshal(v any) json.RawMessage {
 	data, err := json.Marshal(v)
 	if err != nil {
 		panic(err)
@@ -69,10 +69,10 @@ func mustMarshal(v interface{}) json.RawMessage {
 
 // Logger defines the interface for structured logging used throughout the operation framework.
 type Logger interface {
-	Info(msg string, keysAndValues ...interface{})
-	Error(msg string, keysAndValues ...interface{})
-	Warn(msg string, keysAndValues ...interface{})
-	Debug(msg string, keysAndValues ...interface{})
+	Info(msg string, keysAndValues ...any)
+	Error(msg string, keysAndValues ...any)
+	Warn(msg string, keysAndValues ...any)
+	Debug(msg string, keysAndValues ...any)
 }
 
 // ExecuteOperation is a generic execution wrapper that handles common logging and metadata

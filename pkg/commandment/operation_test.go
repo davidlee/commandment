@@ -10,9 +10,10 @@ import (
 // Test Logger implementation
 type TestLogger struct{}
 
-func (l *TestLogger) Info(msg string, keysAndValues ...interface{})  {}
-func (l *TestLogger) Error(msg string, keysAndValues ...interface{}) {}
-func (l *TestLogger) Debug(msg string, keysAndValues ...interface{}) {}
+func (l *TestLogger) Info(msg string, keysAndValues ...any)  {}
+func (l *TestLogger) Warn(msg string, keysAndValues ...any)  {}
+func (l *TestLogger) Error(msg string, keysAndValues ...any) {}
+func (l *TestLogger) Debug(msg string, keysAndValues ...any) {}
 
 // Example service interface for testing
 type TestService interface {

@@ -24,15 +24,19 @@ func NewSimpleLogger() *SimpleLogger {
 	}
 }
 
-func (l *SimpleLogger) Info(msg string, keysAndValues ...interface{}) {
+func (l *SimpleLogger) Info(msg string, keysAndValues ...any) {
 	l.logger.Info(msg, keysAndValues...)
 }
 
-func (l *SimpleLogger) Error(msg string, keysAndValues ...interface{}) {
+func (l *SimpleLogger) Warn(msg string, keysAndValues ...any) {
+	l.logger.Warn(msg, keysAndValues...)
+}
+
+func (l *SimpleLogger) Error(msg string, keysAndValues ...any) {
 	l.logger.Error(msg, keysAndValues...)
 }
 
-func (l *SimpleLogger) Debug(msg string, keysAndValues ...interface{}) {
+func (l *SimpleLogger) Debug(msg string, keysAndValues ...any) {
 	l.logger.Debug(msg, keysAndValues...)
 }
 

@@ -63,7 +63,7 @@ func CreateOperation[TOp Operation[TResult], TResult any](
 // DescriptorFactory recreates an executable operation from a serialized descriptor.
 // This method must be implemented by users for their specific operation types.
 type DescriptorFactory interface {
-	CreateFromDescriptor(descriptor OperationDescriptor) (interface{}, error)
+	CreateFromDescriptor(descriptor OperationDescriptor) (any, error)
 }
 
 // getRequiredServiceType extracts the service type from an operation type using reflection.

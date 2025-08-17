@@ -7,23 +7,23 @@ import (
 
 // ServiceRegistry manages service instances using reflection-based type mapping.
 type ServiceRegistry struct {
-	services map[reflect.Type]interface{}
+	services map[reflect.Type]any
 }
 
 // NewServiceRegistry creates a new empty service registry.
 func NewServiceRegistry() *ServiceRegistry {
 	return &ServiceRegistry{
-		services: make(map[reflect.Type]interface{}),
+		services: make(map[reflect.Type]any),
 	}
 }
 
 // register stores a service instance by its type.
-func (r *ServiceRegistry) register(serviceType reflect.Type, service interface{}) {
+func (r *ServiceRegistry) register(serviceType reflect.Type, service any) {
 	r.services[serviceType] = service
 }
 
 // get retrieves a service instance by its type.
-func (r *ServiceRegistry) get(serviceType reflect.Type) interface{} {
+func (r *ServiceRegistry) get(serviceType reflect.Type) any {
 	service, exists := r.services[serviceType]
 	if !exists {
 		panic(fmt.Sprintf("Service type %v not registered", serviceType))
