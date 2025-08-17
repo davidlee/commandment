@@ -15,7 +15,7 @@ type ShowNodeQuery struct {
 }
 
 func (q *ShowNodeQuery) Execute(ctx context.Context) (Node, error) {
-	return commandment.ExecuteOperation(q, func() (Node, error) {
+	return commandment.ExecuteOperation(ctx, q, func(ctx context.Context) (Node, error) {
 		return q.Service.ShowNode(ctx, q.Params)
 	})
 }
@@ -44,7 +44,7 @@ type DisplayNodeTreeCommand struct {
 }
 
 func (c *DisplayNodeTreeCommand) Execute(ctx context.Context) (NodeTree, error) {
-	return commandment.ExecuteOperation(c, func() (NodeTree, error) {
+	return commandment.ExecuteOperation(ctx, c, func(ctx context.Context) (NodeTree, error) {
 		return c.Service.DisplayTree(ctx, c.Params)
 	})
 }
@@ -73,7 +73,7 @@ type CreateListCommand struct {
 }
 
 func (c *CreateListCommand) Execute(ctx context.Context) (NodeCommandResult, error) {
-	return commandment.ExecuteOperation(c, func() (NodeCommandResult, error) {
+	return commandment.ExecuteOperation(ctx, c, func(ctx context.Context) (NodeCommandResult, error) {
 		return c.Service.CreateList(ctx, c.Params)
 	})
 }

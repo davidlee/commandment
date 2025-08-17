@@ -36,7 +36,7 @@ type TestOperation struct {
 }
 
 func (op *TestOperation) Execute(ctx context.Context) (string, error) {
-	return commandment.ExecuteOperation(op, func() (string, error) {
+	return commandment.ExecuteOperation(ctx, op, func(ctx context.Context) (string, error) {
 		return op.Service.DoSomething(ctx, op.Params)
 	})
 }

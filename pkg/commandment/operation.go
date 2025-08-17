@@ -13,6 +13,12 @@ import (
 	"time"
 )
 
+// contextKey is a private type for context keys to avoid collisions
+type contextKey string
+
+// operationMetadataKey is the context key for operation metadata
+const operationMetadataKey contextKey = "commandment:operation:metadata"
+
 // Operation is the shared base interface for commands and queries,
 // providing common behavior for execution, metadata access, and serialization.
 type Operation[TResult any] interface {
@@ -75,21 +81,37 @@ type Logger interface {
 	Debug(msg string, keysAndValues ...any)
 }
 
-// ExecuteOperation is a generic execution wrapper that handles common logging and metadata
-// for operations. This is typically used by concrete operation implementations.
-func ExecuteOperation[T any](op OperationWithMetadata, businessLogic func() (T, error)) (T, error) {
+// WithOperationMetadata adds operation metadata to the context
+func WithOperationMetadata(ctx context.Context, meta *OperationMetadata) context.Context {
+	return context.WithValue(ctx, operationMetadataKey, meta)
+}
+
+// OperationMetadataFromContext retrieves operation metadata from context
+func OperationMetadataFromContext(ctx context.Context) *OperationMetadata {
+	if meta, ok := ctx.Value(operationMetadataKey).(*OperationMetadata); ok {
+		return meta
+	}
+	return nil
+}
+
+// ExecuteOperation is a context-aware execution wrapper that enriches context with operation metadata
+// before calling the business logic. This allows downstream services to access operation metadata.
+func ExecuteOperation[T any](ctx context.Context, op OperationWithMetadata, businessLogic func(context.Context) (T, error)) (T, error) {
 	op.GetMetadata().Executed = time.Now()
 
 	opTypeName := reflect.TypeOf(op).Elem().Name()
 	logger := op.GetLogger()
 	metadata := op.GetMetadata()
 
+	// Enrich context with operation metadata
+	ctxWithMeta := WithOperationMetadata(ctx, metadata)
+
 	logger.Info("Operation execution started",
 		"operation_type", opTypeName,
 		"operation_id", metadata.UUID,
 	)
 
-	result, err := businessLogic()
+	result, err := businessLogic(ctxWithMeta)
 	op.GetMetadata().Returned = time.Now()
 
 	duration := op.GetMetadata().Returned.Sub(op.GetMetadata().Executed)
