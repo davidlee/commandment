@@ -1,11 +1,13 @@
 # Commandment - Operation Pattern Framework
 
-A Go library implementing the Command/Query pattern with type-safe operation creation, service injection, and centralized logging.
+A Go library implementing the Command/Query pattern with type-safe operation creation, service injection, centralized logging, and flexible dependency management.
 
 ## Features
 
 - **Clean Command/Query Separation**: Distinct interfaces for read and write operations
 - **Type-Safe Service Injection**: Automatic dependency injection using Go generics
+- **Flexible Dependencies Access**: Optional Dependencies injection with context-based access
+- **Context-Enriched Execution**: Operations receive enriched context with metadata and Dependencies
 - **Centralized Logging**: Built-in operation lifecycle logging with structured data
 - **Serializable Operations**: Support for operation persistence and reconstruction
 - **Framework/Domain Separation**: Reusable framework with user-defined domain logic
@@ -32,7 +34,7 @@ The framework follows the Command Pattern with four distinct roles:
 ### 1. Install the Library
 
 ```bash
-go get github.com/davidlee/commandment/pkg/operation
+go get github.com/davidlee/commandment/pkg/commandment
 ```
 
 ### 2. Define Your Domain Services
@@ -73,43 +75,43 @@ type User struct {
 ### 4. Implement Operations
 
 ```go
-import "github.com/davidlee/commandment/pkg/operation"
+import "github.com/davidlee/commandment/pkg/commandment"
 
 // Command for creating users (mutates state)
 type CreateUserCommand struct {
     Params  CreateUserParams
     Service UserService
-    Meta    operation.OperationMetadata
-    Logger  operation.Logger
+    Meta    commandment.OperationMetadata
+    Logger  commandment.Logger
 }
 
 func (c *CreateUserCommand) Execute(ctx context.Context) (User, error) {
-    return operation.ExecuteOperation(c, func() (User, error) {
+    return commandment.ExecuteOperation(ctx, c, func(ctx context.Context) (User, error) {
         return c.Service.CreateUser(ctx, c.Params)
     })
 }
 
-func (c *CreateUserCommand) Metadata() operation.OperationMetadata {
+func (c *CreateUserCommand) Metadata() commandment.OperationMetadata {
     return c.Meta
 }
 
-func (c *CreateUserCommand) Descriptor() operation.OperationDescriptor {
-    return operation.OperationDescriptor{
+func (c *CreateUserCommand) Descriptor() commandment.OperationDescriptor {
+    return commandment.OperationDescriptor{
         Type:     "CreateUserCommand",
         Params:   c.Params,
         Metadata: c.Meta,
     }
 }
 
-func (c *CreateUserCommand) GetMetadata() *operation.OperationMetadata { return &c.Meta }
-func (c *CreateUserCommand) GetLogger() operation.Logger               { return c.Logger }
+func (c *CreateUserCommand) GetMetadata() *commandment.OperationMetadata { return &c.Meta }
+func (c *CreateUserCommand) GetLogger() commandment.Logger               { return c.Logger }
 
 // Query for getting users (read-only)
 type GetUserQuery struct {
     Params  GetUserParams
     Service UserService
-    Meta    operation.OperationMetadata
-    Logger  operation.Logger
+    Meta    commandment.OperationMetadata
+    Logger  commandment.Logger
 }
 
 // Implement similar methods...
@@ -119,19 +121,19 @@ type GetUserQuery struct {
 
 ```go
 type UserBus struct {
-    bus *operation.OperationBus
+    bus *commandment.OperationBus
 }
 
-func NewUserBus(bus *operation.OperationBus) *UserBus {
+func NewUserBus(bus *commandment.OperationBus) *UserBus {
     return &UserBus{bus: bus}
 }
 
 func (b *UserBus) NewCreateUserCommand(params CreateUserParams) (*CreateUserCommand, error) {
-    return operation.CreateOperation[*CreateUserCommand](b.bus, params)
+    return commandment.CreateOperation[*CreateUserCommand](b.bus, params)
 }
 
 func (b *UserBus) NewGetUserQuery(params GetUserParams) (*GetUserQuery, error) {
-    return operation.CreateOperation[*GetUserQuery](b.bus, params)
+    return commandment.CreateOperation[*GetUserQuery](b.bus, params)
 }
 ```
 
@@ -139,11 +141,11 @@ func (b *UserBus) NewGetUserQuery(params GetUserParams) (*GetUserQuery, error) {
 
 ```go
 // Setup framework
-registry := operation.NewServiceRegistry()
-operation.RegisterService[UserService](registry, myUserService)
+registry := commandment.NewServiceRegistry()
+commandment.RegisterService[UserService](registry, myUserService)
 
-logger := myLogger // implement operation.Logger interface
-operationBus := operation.NewOperationBus(registry, logger)
+logger := myLogger // implement commandment.Logger interface
+operationBus := commandment.NewOperationBus(registry, logger)
 userBus := NewUserBus(operationBus)
 
 // Use operations
@@ -180,9 +182,9 @@ cd examples/basic && go run main.go
 ## Package Structure
 
 ### Library (Reusable Framework)
-- **`pkg/operation/`** - Core framework that users import
-  - `operation.go` - Base interfaces and metadata
-  - `bus.go` - Operation bus and creation logic  
+- **`pkg/commandment/`** - Core framework that users import
+  - `operation.go` - Base interfaces, metadata, and context enrichment
+  - `bus.go` - Operation bus, creation logic, and Dependencies management
   - `registry.go` - Service registry with type-safe injection
 
 ### User Code (Domain-Specific)
@@ -212,6 +214,147 @@ cd examples/basic && go run main.go
 - Every operation gets UUID, timestamps, and structured logging
 - Operations log creation, execution start/end, and errors
 - Full audit trail for all operations
+
+## Advanced Features
+
+### Context-Enriched Execution
+
+Operations receive an enriched context during execution that includes operation metadata and optional Dependencies:
+
+```go
+func (c *CreateUserCommand) Execute(ctx context.Context) (User, error) {
+    return commandment.ExecuteOperation(ctx, c, func(enrichedCtx context.Context) (User, error) {
+        // Access operation metadata from context
+        metadata := commandment.OperationMetadataFromContext(enrichedCtx)
+        if metadata != nil {
+            c.Logger.Info("Operation started", "operation_id", metadata.UUID)
+        }
+        
+        // Your business logic with enriched context
+        return c.Service.CreateUser(enrichedCtx, c.Params)
+    })
+}
+```
+
+### Dependencies Management
+
+The framework supports flexible Dependencies injection for complex infrastructure needs:
+
+#### 1. Define Your Dependencies
+
+```go
+// Define your application's Dependencies
+type MyDependencies struct {
+    db         *sql.DB
+    eventStore EventStore
+    logger     Logger
+}
+
+func (d *MyDependencies) NodeRepository() NodeRepository {
+    return NewNodeRepository(d.db, d.logger)
+}
+
+func (d *MyDependencies) WithTransaction(fn func(*MyDependencies) error) error {
+    tx, err := d.db.Begin()
+    if err != nil {
+        return err
+    }
+    defer tx.Rollback()
+    
+    txDeps := &MyDependencies{db: tx, eventStore: d.eventStore, logger: d.logger}
+    err = fn(txDeps)
+    if err != nil {
+        return err
+    }
+    return tx.Commit()
+}
+```
+
+#### 2. Setup Bus with Default Dependencies
+
+```go
+// Initialize your Dependencies
+deps := &MyDependencies{
+    db:         initDB(),
+    eventStore: initEventStore(),
+    logger:     initLogger(),
+}
+
+// Create bus with default Dependencies
+registry := commandment.NewServiceRegistry()
+commandment.RegisterService[UserService](registry, myUserService)
+
+bus := commandment.NewOperationBusWithDefaultDependencies(registry, logger, deps)
+```
+
+#### 3. Access Dependencies in Operations
+
+**Context-Based Access (Recommended):**
+```go
+func (c *CreateUserCommand) Execute(ctx context.Context) (User, error) {
+    return commandment.ExecuteOperation(ctx, c, func(ctx context.Context) (User, error) {
+        // Access Dependencies from enriched context
+        deps := commandment.DependenciesFromContext(ctx).(*MyDependencies)
+        
+        return deps.WithTransaction(func(txDeps *MyDependencies) error {
+            repo := txDeps.NodeRepository()
+            eventWriter := txDeps.EventWriter()
+            
+            // Complex operations with direct Dependencies access
+            return c.createUserWithEvents(repo, eventWriter, c.Params)
+        })
+    })
+}
+```
+
+**Direct Access:**
+```go
+func (c *CreateUserCommand) Execute(ctx context.Context) (User, error) {
+    // Access Dependencies directly from operation
+    deps := commandment.GetDependencies(c).(*MyDependencies)
+    
+    return commandment.ExecuteOperation(ctx, c, func(ctx context.Context) (User, error) {
+        return deps.WithTransaction(func(txDeps *MyDependencies) error {
+            // Use Dependencies for infrastructure concerns
+            return c.Service.CreateUser(ctx, c.Params)
+        })
+    })
+}
+```
+
+#### 4. Per-Operation Dependencies Override
+
+```go
+// Special Dependencies for specific operations
+migrationDeps := &MigrationDependencies{
+    sourceDB: sourceDB,
+    targetDB: targetDB,
+}
+
+// Create operation with specific Dependencies
+op, err := commandment.CreateOperationWithDependencies[*MigrateUsersCommand](
+    bus, 
+    migrationParams, 
+    migrationDeps,
+)
+```
+
+### Usage Patterns
+
+The framework supports multiple patterns for different use cases:
+
+**Pattern 1: Service-Only (Simple)**
+- Use service injection for domain logic
+- No Dependencies needed for simple operations
+
+**Pattern 2: Direct Dependencies (Complex Infrastructure)**
+- Access Dependencies directly for transaction management
+- Ideal for bulk operations, migrations, complex queries
+
+**Pattern 3: Hybrid (Flexible)**
+- Use Dependencies for infrastructure (transactions, caching)
+- Use Services for domain logic
+- Best of both approaches
 
 ## Development
 

@@ -83,12 +83,12 @@ linters:
         - opinionated
         - performance
         - style
-      disabled-checks:
-        # These 3 will detect many cases, but they do sense
-        # if it's performance oriented code
-        - hugeParam
-        - rangeExprCopy
-        - rangeValCopy
+      #disabled-checks:
+      # These 3 will detect many cases, but they do sense
+      # if it's performance oriented code
+      #- hugeParam
+      #- rangeExprCopy
+      #- rangeValCopy
 
     errcheck:
       # Report `a := b.(MyStruct)` when `a, ok := ...` should be.
@@ -130,4 +130,3 @@ issues:
   fix: true
   max-issues-per-linter: 0
   max-same-issues: 0
-

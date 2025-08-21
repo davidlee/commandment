@@ -9,15 +9,27 @@ import (
 // OperationBus is the central orchestrator that manages service registry,
 // creates operations with dependency injection, and handles operation lifecycle.
 type OperationBus struct {
-	registry *ServiceRegistry
-	logger   Logger
+	registry    *ServiceRegistry
+	logger      Logger
+	defaultDeps any // Optional default Dependencies for all operations
 }
 
 // NewOperationBus creates a new OperationBus with the provided service registry and logger.
 func NewOperationBus(registry *ServiceRegistry, logger Logger) *OperationBus {
 	return &OperationBus{
-		registry: registry,
-		logger:   logger,
+		registry:    registry,
+		logger:      logger,
+		defaultDeps: nil,
+	}
+}
+
+// NewOperationBusWithDefaultDependencies creates a new OperationBus with default Dependencies
+// that will be available to all operations created by this bus.
+func NewOperationBusWithDefaultDependencies(registry *ServiceRegistry, logger Logger, defaultDeps any) *OperationBus {
+	return &OperationBus{
+		registry:    registry,
+		logger:      logger,
+		defaultDeps: defaultDeps,
 	}
 }
 
@@ -27,6 +39,25 @@ func NewOperationBus(registry *ServiceRegistry, logger Logger) *OperationBus {
 func CreateOperation[TOp Operation[TResult], TResult any](
 	bus *OperationBus,
 	params any,
+) (TOp, error) {
+	return createOperationInternal[TOp, TResult](bus, params, bus.defaultDeps)
+}
+
+// CreateOperationWithDependencies creates a new operation instance with specific Dependencies,
+// overriding any default Dependencies configured on the bus.
+func CreateOperationWithDependencies[TOp Operation[TResult], TResult any](
+	bus *OperationBus,
+	params any,
+	deps any,
+) (TOp, error) {
+	return createOperationInternal[TOp, TResult](bus, params, deps)
+}
+
+// createOperationInternal is the shared implementation for operation creation
+func createOperationInternal[TOp Operation[TResult], TResult any](
+	bus *OperationBus,
+	params any,
+	deps any,
 ) (TOp, error) {
 	// Use reflection to determine required service type
 	serviceType := getRequiredServiceType[TOp]()
@@ -40,11 +71,16 @@ func CreateOperation[TOp Operation[TResult], TResult any](
 
 	// Log operation creation
 	opTypeName := reflect.TypeOf((*TOp)(nil)).Elem().Name()
-	bus.logger.Info("Operation created",
+	logData := []any{
 		"operation_type", opTypeName,
 		"operation_id", metadata.UUID,
 		"service_type", serviceType.Name(),
-	)
+	}
+	if deps != nil {
+		depsType := reflect.TypeOf(deps).String()
+		logData = append(logData, "dependencies_type", depsType)
+	}
+	bus.logger.Info("Operation created", logData...)
 
 	// Create operation with injected service, metadata, and logger
 	op, err := newOperationWithService[TOp](params, service, metadata, bus.logger)
@@ -55,6 +91,11 @@ func CreateOperation[TOp Operation[TResult], TResult any](
 			"error", err,
 		)
 		return op, err
+	}
+
+	// Store dependencies in operation for later context enrichment
+	if deps != nil {
+		storeOperationDependencies(op, deps)
 	}
 
 	return op, nil
@@ -115,4 +156,17 @@ func newOperationWithService[TOp any](params, service any, metadata OperationMet
 		}
 		return result, nil
 	}
+}
+
+// operationDependencies stores dependencies for operations using a weak map pattern
+var operationDependencies = make(map[any]any)
+
+// storeOperationDependencies associates dependencies with an operation instance
+func storeOperationDependencies(op, deps any) {
+	operationDependencies[op] = deps
+}
+
+// GetOperationDependencies retrieves dependencies for an operation instance
+func GetOperationDependencies(op any) any {
+	return operationDependencies[op]
 }

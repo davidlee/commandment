@@ -19,6 +19,9 @@ type contextKey string
 // operationMetadataKey is the context key for operation metadata
 const operationMetadataKey contextKey = "commandment:operation:metadata"
 
+// dependenciesKey is the context key for dependencies
+const dependenciesKey contextKey = "commandment:dependencies"
+
 // Operation is the shared base interface for commands and queries,
 // providing common behavior for execution, metadata access, and serialization.
 type Operation[TResult any] interface {
@@ -94,6 +97,24 @@ func OperationMetadataFromContext(ctx context.Context) *OperationMetadata {
 	return nil
 }
 
+// WithDependencies adds dependencies to the context
+func WithDependencies(ctx context.Context, deps any) context.Context {
+	return context.WithValue(ctx, dependenciesKey, deps)
+}
+
+// DependenciesFromContext retrieves dependencies from context.
+// Returns nil if no dependencies are available.
+func DependenciesFromContext(ctx context.Context) any {
+	return ctx.Value(dependenciesKey)
+}
+
+// GetDependencies retrieves dependencies from an operation instance.
+// This is a convenience function for accessing dependencies outside of execution context.
+// During execution, prefer DependenciesFromContext(ctx) for context-based access.
+func GetDependencies(op OperationWithMetadata) any {
+	return GetOperationDependencies(op)
+}
+
 // ExecuteOperation is a context-aware execution wrapper that enriches context with operation metadata
 // before calling the business logic. This allows downstream services to access operation metadata.
 func ExecuteOperation[T any](ctx context.Context, op OperationWithMetadata, businessLogic func(context.Context) (T, error)) (T, error) {
@@ -105,6 +126,12 @@ func ExecuteOperation[T any](ctx context.Context, op OperationWithMetadata, busi
 
 	// Enrich context with operation metadata
 	ctxWithMeta := WithOperationMetadata(ctx, metadata)
+	
+	// Enrich context with dependencies if available
+	deps := GetOperationDependencies(op)
+	if deps != nil {
+		ctxWithMeta = WithDependencies(ctxWithMeta, deps)
+	}
 
 	logger.Info("Operation execution started",
 		"operation_type", opTypeName,
