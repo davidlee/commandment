@@ -47,3 +47,8 @@ func GetService[T any](r *ServiceRegistry) T {
 	}
 	return result
 }
+
+// GetServiceByType retrieves a service by its reflect.Type
+func (r *ServiceRegistry) GetServiceByType(serviceType reflect.Type) any {
+	return r.get(serviceType)
+}
